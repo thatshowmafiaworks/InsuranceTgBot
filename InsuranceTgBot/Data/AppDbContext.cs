@@ -10,5 +10,6 @@ namespace InsuranceTgBot.Data
         }
 
         public DbSet<User> Users { get; set; }
+        public DbSet<HistoryRecord> HistoryRecords { get; set; }
     }
 }

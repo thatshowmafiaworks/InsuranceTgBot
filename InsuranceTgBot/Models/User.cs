@@ -1,13 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace InsuranceTgBot.Models
+﻿namespace InsuranceTgBot.Models
 {
     public class User
     {
-        public long Id { get; set; }
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public long TgId { get; set; }
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
-        [Required]
         public string UserName { get; set; }
         public long ChatId { get; set; }
     }
