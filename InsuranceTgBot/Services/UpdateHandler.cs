@@ -10,7 +10,8 @@ namespace InsuranceTgBot.Services
         ITelegramBotClient bot,
         ILogger<UpdateHandler> logger,
         IUserRepository users,
-        IHistoryService history
+        IHistoryService history,
+        IAIService aIService
         ) : IUpdateHandler
     {
         public async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source, CancellationToken ct)
@@ -55,7 +56,7 @@ namespace InsuranceTgBot.Services
             Message sentMessage = await (message.Text.Split(' ')[0] switch
             {
                 "/start" => StartMessage(message),
-                _ => throw new NotImplementedException()
+                _ => Usage(message)
             });
             await history.CreateNew(message);
         }
@@ -63,9 +64,15 @@ namespace InsuranceTgBot.Services
         private async Task<Message> StartMessage(Message message)
         {
             var text = """
-                Привіт, я допоможу оформити страхування, для цього відправ мені фото документу особи!
+                Привіт, я допоможу оформити страхування, для цього відправ мені фото документу особи або задай запитання!
                 """;
             return await bot.SendMessage(message.Chat.Id, text, ParseMode.Html);
+        }
+
+        private async Task<Message> Usage(Message message)
+        {
+            var response = await aIService.GetCompletion(message.Text);
+            return await bot.SendMessage(message.Chat.Id, response, ParseMode.Html);
         }
     }
 }

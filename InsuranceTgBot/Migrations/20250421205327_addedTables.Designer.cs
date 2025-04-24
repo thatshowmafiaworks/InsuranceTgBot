@@ -4,6 +4,7 @@ using InsuranceTgBot.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace InsuranceTgBot.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250421205327_addedTables")]
+    partial class addedTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -84,12 +87,7 @@ namespace InsuranceTgBot.Migrations
                     b.Property<long>("UserId")
                         .HasColumnType("bigint");
 
-                    b.Property<string>("UserId1")
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("UserId1");
 
                     b.ToTable("HistoryRecords");
                 });
@@ -182,13 +180,6 @@ namespace InsuranceTgBot.Migrations
                     b.ToTable("VehicleDocuments");
                 });
 
-            modelBuilder.Entity("InsuranceTgBot.Models.HistoryRecord", b =>
-                {
-                    b.HasOne("InsuranceTgBot.Models.User", null)
-                        .WithMany("HistoryRecords")
-                        .HasForeignKey("UserId1");
-                });
-
             modelBuilder.Entity("InsuranceTgBot.Models.UserData", b =>
                 {
                     b.HasOne("InsuranceTgBot.Models.DriverLicense", "DriverLicense")
@@ -220,8 +211,6 @@ namespace InsuranceTgBot.Migrations
 
             modelBuilder.Entity("InsuranceTgBot.Models.User", b =>
                 {
-                    b.Navigation("HistoryRecords");
-
                     b.Navigation("UserData")
                         .IsRequired();
                 });
