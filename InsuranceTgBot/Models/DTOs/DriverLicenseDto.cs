@@ -1,9 +1,7 @@
-﻿namespace InsuranceTgBot.Models
+﻿namespace InsuranceTgBot.Models.DTOs
 {
-    public class DriverLicense
+    public class DriverLicenseDto
     {
-        public string Id { get; set; } = Guid.NewGuid().ToString();
-        public string UserId { get; set; }
         public string CountryCode { get; set; } = "";
         public string State { get; set; } = "";
         public string IdentificationNumber { get; set; } = "";

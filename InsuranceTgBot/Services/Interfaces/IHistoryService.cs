@@ -1,7 +1,7 @@
 ﻿using InsuranceTgBot.Models;
 using Telegram.Bot.Types;
 
-namespace InsuranceTgBot.Services
+namespace InsuranceTgBot.Services.Interfaces
 {
     public interface IHistoryService
     {

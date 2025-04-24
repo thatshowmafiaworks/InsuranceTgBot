@@ -1,9 +1,7 @@
-﻿namespace InsuranceTgBot.Models
+﻿namespace InsuranceTgBot.Models.DTOs
 {
-    public class VehicleDocument
+    public class VehicleDocumentDto
     {
-        public string Id { get; set; } = Guid.NewGuid().ToString();
-        public string UserId { get; set; }
         public string VehicleIdNumber { get; set; } = "";
         public string Manufacturer { get; set; } = "";
         public string Model { get; set; } = "";

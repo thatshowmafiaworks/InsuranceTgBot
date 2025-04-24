@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using InsuranceTgBot.Models;
+using InsuranceTgBot.Services.Interfaces;
+using Newtonsoft.Json;
 using System.Net.Http.Headers;
 using System.Text;
 
@@ -9,13 +11,47 @@ namespace InsuranceTgBot.Services
             ILogger<GeminiService> logger
         ) : IAIService
     {
-        public async Task<string> GetCompletion(string text)
+
+
+        private readonly string apiEndpoint = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={config["GeminiApiKey"]}";
+
+        public async Task<string> GetCompletion(string text, UserProgress progress)
         {
-            var apiEndpoint = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={config["GeminiApiKey"]}";
-            var responseFromGemini = "fuck";
             using (var client = new HttpClient())
             {
-                //client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer ", config["GeminiApiKey"]);
+                dynamic thingsToAsk = new
+                {
+                    ProvidedDriverLicense = progress.ProvidedDriverLicense,
+                    ProvidedVehicleIdentificationDocument = progress.ProvidedVehicleIdentificationDocument,
+                    IsPaid = progress.IsPaid
+                };
+                string prompt = $"""
+                    You are a helpful and professional insurance agent assistant. You receive a JSON object that contains information about a client's insurance request.
+                    Your task is to guide the client through completing all the required fields in the JSON by asking them relevant and friendly questions, one at a time.
+                    The JSON may have missing fields or fields marked as null, "", or placeholder values like "TBD".
+                    Things that needed to be asked marked as false something that dont need to be asked marked as true.
+                    If every field is empty say that you are about to help them to apply for a car insurance.
+                    Dont ask yes or no questions, if you need driver license or car documentation just ask to provide a photo, if both empty always first to ask is driver license.
+                    Assume that you dont know about what you were talking with user before you should focus on JSON object.
+                    If some of the values is true please dont say hello.
+                    For each missing or incomplete field, ask the user to provide the correct information, using natural and polite language.
+                    Once all required fields are filled, tell the user that the form is complete and ready to proceed to the next step (e.g., review, payment, or generation of the final document).
+                    Always use the following rules:
+                    1) Do not ask for fields that are already filled and valid.
+                    2) Be concise, friendly, and professional.
+                    3) Wait for the user's response after each question before continuing.
+                    4) You do not need to reprint the full JSON — just work with the information inside.
+                    5) You are only responsible for the conversational flow, not for validation logic or final submission.
+                    6) Always answer in users language.
+                    Here is users message:
+                    {text}
+
+                    Here is the JSON object:
+                    {System.Text.Json.JsonSerializer.Serialize(thingsToAsk)}
+                    """;
+
+                logger.LogInformation(prompt);
+
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
                 var requestBody = new
@@ -26,7 +62,7 @@ namespace InsuranceTgBot.Services
                         {
                             parts = new[]
                             {
-                                new { text = text }
+                                new { text = prompt }
                             }
                         }
                     }
@@ -48,7 +84,7 @@ namespace InsuranceTgBot.Services
                     logger.LogWarning($"Exception:'{ex.Message}'\n with inner:{ex.InnerException?.Message}");
                 }
             }
-            return responseFromGemini;
+            return "Sorry didn't understand question, repeat please";
         }
     }
 }

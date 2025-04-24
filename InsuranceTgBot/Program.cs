@@ -1,6 +1,6 @@
-using DotnetGeminiSDK;
 using InsuranceTgBot.Data;
 using InsuranceTgBot.Services;
+using InsuranceTgBot.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Telegram.Bot;
@@ -24,12 +24,11 @@ builder.Services.AddHttpClient("tgwebhook").RemoveAllLoggers().AddTypedClient<IT
     httpClient => new TelegramBotClient(builder.Configuration["BotToken"], httpClient));
 
 // adding services
-builder.Services.AddGeminiClient(opts
-    => opts.ApiKey = builder.Configuration["GeminiApiKey"]);
 builder.Services.AddScoped<UpdateHandler>();
 builder.Services.AddScoped<IHistoryService, HistoryService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAIService, GeminiService>();
+builder.Services.AddScoped<IPhotoFormatter, MockFormatter>();
 
 
 builder.Services.AddControllers();

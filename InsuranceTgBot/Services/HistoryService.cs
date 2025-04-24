@@ -1,5 +1,6 @@
 ﻿using InsuranceTgBot.Data;
 using InsuranceTgBot.Models;
+using InsuranceTgBot.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Telegram.Bot.Types;
 

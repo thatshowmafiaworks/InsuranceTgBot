@@ -4,6 +4,7 @@ using InsuranceTgBot.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace InsuranceTgBot.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250424160019_update")]
+    partial class update
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -132,17 +135,25 @@ namespace InsuranceTgBot.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<bool>("AskedToPay")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("AskedToProvideID")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("AskedToProvideVehicleId")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("DriverLicenseId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<bool>("IsPaid")
                         .HasColumnType("bit");
 
-                    b.Property<string>("LastMessage")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("ProvidedDriverLicense")
+                    b.Property<bool>("ProvidedID")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("ProvidedVehicleIdentificationDocument")
+                    b.Property<bool>("ProvidedVehicleId")
                         .HasColumnType("bit");
 
                     b.Property<string>("UserId")
@@ -152,10 +163,17 @@ namespace InsuranceTgBot.Migrations
                     b.Property<long>("UserTgId")
                         .HasColumnType("bigint");
 
+                    b.Property<string>("VehicleDocumentId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("DriverLicenseId");
 
                     b.HasIndex("UserId")
                         .IsUnique();
+
+                    b.HasIndex("VehicleDocumentId");
 
                     b.ToTable("UserProgresses");
                 });
@@ -213,11 +231,23 @@ namespace InsuranceTgBot.Migrations
 
             modelBuilder.Entity("InsuranceTgBot.Models.UserProgress", b =>
                 {
+                    b.HasOne("InsuranceTgBot.Models.DriverLicense", "DriverLicense")
+                        .WithMany()
+                        .HasForeignKey("DriverLicenseId");
+
                     b.HasOne("InsuranceTgBot.Models.User", null)
                         .WithOne("UserProgress")
                         .HasForeignKey("InsuranceTgBot.Models.UserProgress", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("InsuranceTgBot.Models.VehicleDocument", "VehicleDocument")
+                        .WithMany()
+                        .HasForeignKey("VehicleDocumentId");
+
+                    b.Navigation("DriverLicense");
+
+                    b.Navigation("VehicleDocument");
                 });
 
             modelBuilder.Entity("InsuranceTgBot.Models.VehicleDocument", b =>
