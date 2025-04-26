@@ -68,7 +68,8 @@ namespace InsuranceTgBot.Services
                 Message sentMessage = await (message.Text.Split(' ')[0] switch
                 {
                     "/start" => StartMessage(message),
-                    "/restart" => RestartInteraction(message),
+                    "/restart" => RestartProgress(message),
+                    "/100" => PaymentInteraction(message),
                     _ => Usage(message)
                 });
             }
@@ -77,10 +78,13 @@ namespace InsuranceTgBot.Services
 
         private async Task<Message> StartMessage(Message message)
         {
-            var text = """
-                Привіт, я допоможу оформити страхування, для цього відправ мені фото документу особи або задай запитання!
+            var text = $"""                
+                This is not user message, write answer to user using this language code:"{message.From.LanguageCode}"
                 """;
-            return await bot.SendMessage(message.Chat.Id, text, ParseMode.Html);
+            var progress = await users.GetProgress(message.From.Id);
+            progress.LastMessage = text;
+            var answer = await aIService.GetCompletion(text, progress);
+            return await bot.SendMessage(message.Chat.Id, answer, ParseMode.Html);
         }
 
         private async Task<Message> Usage(Message message)
@@ -93,9 +97,22 @@ namespace InsuranceTgBot.Services
             return await bot.SendMessage(message.Chat.Id, response, ParseMode.Html);
         }
 
-        private async Task<Message> RestartInteraction(Message message)
+        private async Task<Message> RestartProgress(Message message)
         {
-            throw new NotImplementedException();
+            var progress = await users.GetProgress(message.From.Id);
+            progress.ProvidedVehicleIdentificationDocument = false;
+            progress.IsPaid = false;
+            progress.ProvidedDriverLicense = false;
+            await users.UpdateProgress(progress);
+            return await StartMessage(message);
+        }
+
+        private async Task<Message> PaymentInteraction(Message message)
+        {
+            var prompt = $"this is not user message, write answer using this language code:{message.From.LanguageCode}";
+            var text = await aIService.ConfirmedMessage(prompt);
+
+            return await bot.SendMessage(message.Chat.Id, text);
         }
 
         private async Task<Message> ProcessPhoto(Message message)
@@ -126,7 +143,9 @@ namespace InsuranceTgBot.Services
                 progress.ProvidedVehicleIdentificationDocument = true;
                 await users.AddVehicleId(vehicleId, userId);
                 await users.UpdateProgress(progress);
-                var text = await aIService.GetCompletion(progress.LastMessage, progress);
+                var license = await users.GetLicense(message.From.Id);
+                var vehicleDoc = await users.GetVehicle(message.From.Id);
+                var text = await aIService.ConfirmData(progress.LastMessage, license, vehicleDoc, progress);
                 return await bot.SendMessage(message.Chat.Id, text);
             }
             return await bot.SendMessage(message.Chat.Id, "Something went wrong try again please");

@@ -238,23 +238,42 @@ namespace InsuranceTgBot.Services
         {
             try
             {
-                var license = new DriverLicense()
+                var license = await context.DriverLicenses.FirstOrDefaultAsync(x => x.UserId.Equals(userId));
+                if (license is null)
                 {
-                    Id = Guid.NewGuid().ToString(),
-                    UserId = userId,
-                    CountryCode = dto.CountryCode,
-                    State = dto.State,
-                    IdentificationNumber = dto.IdentificationNumber,
-                    Category = dto.Category,
-                    FirstName = dto.FirstName,
-                    LastName = dto.LastName,
-                    DateOfBirth = dto.DateOfBirth,
-                    Issued = dto.Issued,
-                    Expires = dto.Expires,
-                    DDNumber = dto.DDNumber
-                };
-                await context.DriverLicenses.AddAsync(license);
-                await context.SaveChangesAsync();
+                    license = new DriverLicense()
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        UserId = userId,
+                        CountryCode = dto.CountryCode,
+                        State = dto.State,
+                        IdentificationNumber = dto.IdentificationNumber,
+                        Category = dto.Category,
+                        FirstName = dto.FirstName,
+                        LastName = dto.LastName,
+                        DateOfBirth = dto.DateOfBirth,
+                        Issued = dto.Issued,
+                        Expires = dto.Expires,
+                        DDNumber = dto.DDNumber
+                    };
+                    await context.DriverLicenses.AddAsync(license);
+                    await context.SaveChangesAsync();
+                }
+                else
+                {
+                    license.CountryCode = dto.CountryCode;
+                    license.State = dto.State;
+                    license.IdentificationNumber = dto.IdentificationNumber;
+                    license.Category = dto.Category;
+                    license.FirstName = dto.FirstName;
+                    license.LastName = dto.LastName;
+                    license.DateOfBirth = dto.DateOfBirth;
+                    license.Issued = dto.Issued;
+                    license.Expires = dto.Expires;
+                    license.DDNumber = dto.DDNumber;
+                    context.DriverLicenses.Update(license);
+                    await context.SaveChangesAsync();
+                }
             }
             catch (Exception ex)
             {
@@ -282,6 +301,38 @@ namespace InsuranceTgBot.Services
             catch (Exception ex)
             {
                 logger.LogWarning($"Exception:'{ex.Message}'\n with inner:{ex.InnerException?.Message}");
+            }
+        }
+
+        public async Task<DriverLicense> GetLicense(long tgId)
+        {
+            try
+            {
+                var user = await GetByTgId(tgId);
+                if (user is null) throw new NullReferenceException("User not found");
+                var license = await context.DriverLicenses.FirstOrDefaultAsync(x => x.UserId.Equals(user.Id));
+                return license;
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning($"Exception:'{ex.Message}'\n with inner:{ex.InnerException?.Message}");
+                return null;
+            }
+        }
+
+        public async Task<VehicleDocument> GetVehicle(long tgId)
+        {
+            try
+            {
+                var user = await GetByTgId(tgId);
+                if (user is null) throw new NullReferenceException("User not found");
+                var vehicleId = await context.VehicleDocuments.FirstOrDefaultAsync(x => x.UserId.Equals(user.Id));
+                return vehicleId;
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning($"Exception:'{ex.Message}'\n with inner:{ex.InnerException?.Message}");
+                return null;
             }
         }
     }

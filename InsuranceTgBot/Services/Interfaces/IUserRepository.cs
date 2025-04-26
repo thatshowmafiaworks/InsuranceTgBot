@@ -17,9 +17,10 @@ namespace InsuranceTgBot.Services.Interfaces
         Task<UserProgress> GetProgress(User user);
         Task<UserProgress> GetProgress(long tgId);
         Task<UserProgress> GetProgress(string userId);
-
         Task UpdateProgress(UserProgress progress);
         Task AddLicense(DriverLicenseDto dto, string userId);
         Task AddVehicleId(VehicleDocumentDto dto, string userId);
+        Task<DriverLicense> GetLicense(long tgId);
+        Task<VehicleDocument> GetVehicle(long tgId);
     }
 }

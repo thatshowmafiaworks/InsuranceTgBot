@@ -50,7 +50,7 @@ namespace InsuranceTgBot.Services
                     {System.Text.Json.JsonSerializer.Serialize(thingsToAsk)}
                     """;
 
-                logger.LogInformation(prompt);
+                //logger.LogInformation(prompt);
 
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
@@ -85,6 +85,139 @@ namespace InsuranceTgBot.Services
                 }
             }
             return "Sorry didn't understand question, repeat please";
+        }
+        public async Task<string> ConfirmData(string text, DriverLicense license, VehicleDocument vehicleDoc, UserProgress progress)
+        {
+            using (var client = new HttpClient())
+            {
+                dynamic licenseInfo = new
+                {
+                    CountryCode = license.CountryCode,
+                    State = license.State,
+                    IdentificationNumber = license.IdentificationNumber,
+                    Category = license.Category,
+                    FirstName = license.FirstName,
+                    LastName = license.LastName,
+                    DateOfBirth = license.DateOfBirth,
+                    Issued = license.Issued,
+                    Expires = license.Expires,
+                    DDNumber = license.DDNumber,
+                };
+
+                dynamic vehicleInfo = new
+                {
+                    VehicleIdNumber = vehicleDoc.VehicleIdNumber,
+                    Manufacturer = vehicleDoc.Manufacturer,
+                    Model = vehicleDoc.Model,
+                    Issued = vehicleDoc.Issued,
+                    Manufactured = vehicleDoc.Manufactured
+                };
+                var prompt = $"""
+                    You are a helpful and professional insurance agent assistant. You receive a JSON objects that contains information about a client's insurance request.
+                    Your task is to translate JSON objects in to human readable format and ask user if he agrees with provided data and say if user want to change data he need to write command "/restart".
+                    You should also specify that if user confirm information you should say that currently we have only one payment options if user agree he should write command "/100".
+
+                    Always use the following rules:
+                    1) Be concise, friendly, and professional.
+                    2) You do need to reprint the full JSON data but in human text format.
+                    3) You are only responsible for the conversational flow, not for validation logic or final submission.
+                    4) Always answer in users language.
+                    Here is users message:
+                    {text}
+
+                    Here is the Driver License Information:
+                    {System.Text.Json.JsonSerializer.Serialize(licenseInfo)}
+
+                    Here is the Vehicle Identification Document:
+                    {System.Text.Json.JsonSerializer.Serialize(vehicleInfo)}
+                    """;
+
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                var requestBody = new
+                {
+                    contents = new[]
+                    {
+                        new
+                        {
+                            parts = new[]
+                            {
+                                new { text = prompt }
+                            }
+                        }
+                    }
+                };
+
+                var jsonRequest = System.Text.Json.JsonSerializer.Serialize(requestBody);
+                var content = new StringContent(jsonRequest, Encoding.UTF8, "appplication/json");
+
+                try
+                {
+                    var response = await client.PostAsync(apiEndpoint, content);
+                    response.EnsureSuccessStatusCode();
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    dynamic responseText = JsonConvert.DeserializeObject(responseContent);
+                    return responseText.candidates[0].content.parts[0].text;
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning($"Exception:'{ex.Message}'\n with inner:{ex.InnerException?.Message}");
+                }
+            }
+            return "Something went wrong, please retry later";
+
+        }
+
+        public async Task<string> ConfirmedMessage(string text)
+        {
+            using (var client = new HttpClient())
+            {
+                var prompt = $"""
+                    You are a helpful and professional insurance agent assistant.
+                    You should write message that you are going to generate insurance document with data that user already provided.
+
+                    Always use the following rules:
+                    1) Be concise, friendly, and professional.
+                    2) You are only responsible for the conversational flow, not for validation logic or final submission.
+                    6) Always answer in users language.
+                    Here is users message:
+                    {text}
+                    """;
+
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                var requestBody = new
+                {
+                    contents = new[]
+                    {
+                        new
+                        {
+                            parts = new[]
+                            {
+                                new { text = prompt }
+                            }
+                        }
+                    }
+                };
+
+                var jsonRequest = System.Text.Json.JsonSerializer.Serialize(requestBody);
+                var content = new StringContent(jsonRequest, Encoding.UTF8, "appplication/json");
+
+                try
+                {
+                    var response = await client.PostAsync(apiEndpoint, content);
+                    response.EnsureSuccessStatusCode();
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    dynamic responseText = JsonConvert.DeserializeObject(responseContent);
+                    return responseText.candidates[0].content.parts[0].text;
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning($"Exception:'{ex.Message}'\n with inner:{ex.InnerException?.Message}");
+                }
+
+            }
+            return "Something went wrong, please retry later";
         }
     }
 }
