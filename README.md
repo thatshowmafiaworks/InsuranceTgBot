@@ -2,6 +2,8 @@
 
 This bot allows users to process insurance applications via Telegram. It handles document photos, converts them to text, allows data editing, facilitates payment, generates the final document, and sends it to the user. All user responses are generated using Google`s Gemini.
 
+Bot is working currently [here](https://t.me/insurance_very_original_bot)
+
 ## Table of Contents
 - [Description](#description)
 - [Requirements](#requirements)
