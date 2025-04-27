@@ -29,6 +29,7 @@ builder.Services.AddScoped<IHistoryService, HistoryService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAIService, GeminiService>();
 builder.Services.AddScoped<IPhotoFormatter, MockFormatter>();
+builder.Services.AddScoped<IDocumentGenerator, DocumentGenerator>();
 
 
 builder.Services.AddControllers();

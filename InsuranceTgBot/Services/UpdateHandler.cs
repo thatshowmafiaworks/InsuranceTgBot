@@ -14,7 +14,8 @@ namespace InsuranceTgBot.Services
         IUserRepository users,
         IHistoryService history,
         IAIService aIService,
-        IPhotoFormatter photoFormatter
+        IPhotoFormatter photoFormatter,
+        IDocumentGenerator docGen
         ) : IUpdateHandler
     {
         public async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source, CancellationToken ct)
@@ -110,9 +111,13 @@ namespace InsuranceTgBot.Services
         private async Task<Message> PaymentInteraction(Message message)
         {
             var prompt = $"this is not user message, write answer using this language code:{message.From.LanguageCode}";
+            var progress = await users.GetProgress(message.From.Id);
+            progress.IsPaid = true;
+            await users.UpdateProgress(progress);
             var text = await aIService.ConfirmedMessage(prompt);
 
-            return await bot.SendMessage(message.Chat.Id, text);
+            var sentMessage = await bot.SendMessage(message.Chat.Id, text);
+            return await DocumentGeneration(message);
         }
 
         private async Task<Message> ProcessPhoto(Message message)
@@ -149,6 +154,18 @@ namespace InsuranceTgBot.Services
                 return await bot.SendMessage(message.Chat.Id, text);
             }
             return await bot.SendMessage(message.Chat.Id, "Something went wrong try again please");
+        }
+
+        private async Task<Message> DocumentGeneration(Message message)
+        {
+            var license = await users.GetLicense(message.From.Id);
+            var vehicleDoc = await users.GetVehicle(message.From.Id);
+            var user = await users.GetByTgId(message.From.Id);
+            var pathToPdf = docGen.GenerateDocument(license, vehicleDoc, user);
+
+            await using var stream = File.OpenRead(pathToPdf);
+
+            return await bot.SendDocument(message.Chat.Id, stream);
         }
     }
 }
