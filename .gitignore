@@ -17,7 +17,8 @@
 mono_crash.*
 
 # Build results
-wwwwroot/
+wwwwroot/Docs/*
+!wwwroot/Docs/.gitkeep
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
